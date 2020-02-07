@@ -5,6 +5,10 @@ pipeline {
 		maven 'LocalMaven'
 	}
 	
+	triggers {
+		pollSCM('* * * * *')
+	}
+	
     stages{
         stage('Build'){
             steps {
@@ -17,9 +21,19 @@ pipeline {
                 }
             }
         }
-		stage ('Deploy to staging'){
-			steps {
-				build job: 'deploy-to-staging'
+		stage ('Deployments'){
+			parallel {
+				stage ('Deploy to staging'){
+					steps {
+						build job: 'deploy-to-staging'
+					}
+				}
+				
+				stage ('Checkstyle'){
+					steps {
+						build job: 'static-analysis'
+					}
+				}
 			}
 		}
     }
