@@ -1,40 +1,7 @@
-pipeline {
-    agent any
-	
-	tools {
-		maven 'LocalMaven'
-	}
-	
-	triggers {
-		pollSCM('* * * * *')
-	}
-	
-    stages{
-        stage('Build'){
-            steps {
-                bat 'mvn clean package'
-            }
-            post {
-                success {
-                    echo 'Now Archiving...'
-                    archiveArtifacts artifacts: '**/target/*.war'
-                }
-            }
-        }
-		stage ('Deployments'){
-			parallel {
-				stage ('Deploy to staging'){
-					steps {
-						build job: 'deploy-to-staging'
-					}
-				}
-				
-				stage ('Checkstyle'){
-					steps {
-						build job: 'static-analysis'
-					}
-				}
-			}
-		}
-    }
-}
+FROM tomcat:8.0
+
+ADD ./webapp/target/*.war /usr/local/tomcat/webapps
+
+EXPOSE 8080
+
+CMD ["catalina.sh" , "run"]
